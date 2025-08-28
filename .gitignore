@@ -1,0 +1,14 @@
+.venv/
+__pycache__/
+*.pyc
+.streamlit/
+.env
+.DS_Store
+
+# Streamlit caches
+.streamlit/
+
+# Python build artifacts
+build/
+dist/
+*.egg-info/
