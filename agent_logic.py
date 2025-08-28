@@ -18,6 +18,14 @@ from dataclasses import dataclass
 from typing import List, Dict, Optional
 import os
 
+# 尝试读取 Streamlit Secrets（在 Cloud 上常用）
+try:
+    import streamlit as st  # type: ignore
+    _st_available = True
+except Exception:
+    st = None  # type: ignore
+    _st_available = False
+
 try:
     # 兼容 openai>=1.0 的新客户端
     from openai import OpenAI  # type: ignore
@@ -51,8 +59,20 @@ def format_response_markdown(resp: AgentResponse) -> str:
 
 def generate_chat_reply(user_text: str) -> str:
     """面向聊天的自然回复：优先调用 OpenAI，对应模型不可用时回退到本地规则。"""
-    api_key = os.getenv("OPENAI_API_KEY")
-    model = os.getenv("OPENAI_MODEL", "gpt-4o-mini")
+    # 读取密钥与模型：优先 st.secrets，其次环境变量
+    api_key = None
+    model = "gpt-4o-mini"
+    if _st_available:
+        try:
+            api_key = st.secrets.get("OPENAI_API_KEY", None)  # type: ignore
+            model = st.secrets.get("OPENAI_MODEL", model)  # type: ignore
+        except Exception:
+            pass
+    if not api_key:
+        api_key = os.getenv("OPENAI_API_KEY")
+    env_model = os.getenv("OPENAI_MODEL")
+    if env_model:
+        model = env_model
 
     if _openai_available and api_key:
         try:
