@@ -17,14 +17,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import List, Dict, Optional
 import os
-
-# 尝试读取 Streamlit Secrets（在 Cloud 上常用）
-try:
-    import streamlit as st  # type: ignore
-    _st_available = True
-except Exception:
-    st = None  # type: ignore
-    _st_available = False
+import random
 
 try:
     # 兼容 openai>=1.0 的新客户端
@@ -34,6 +27,14 @@ except Exception:
     OpenAI = None  # type: ignore
     _openai_available = False
 
+# 尝试读取 Streamlit Secrets（在 Cloud 上常用）
+try:
+    import streamlit as st  # type: ignore
+    _st_available = True
+except Exception:
+    st = None  # type: ignore
+    _st_available = False
+
 
 @dataclass
 class AgentResponse:
@@ -42,89 +43,6 @@ class AgentResponse:
     steps: List[str]
     encouragement: str
     professional_reminder: str
-
-
-def format_response_markdown(resp: AgentResponse) -> str:
-    """将结构化响应渲染为对话可读的 Markdown 文本。"""
-    parts: List[str] = []
-    parts.append(f"### 情绪识别\n你当前可能的情绪类型：{resp.emotion_label}")
-    parts.append("### 心理分析\n" + resp.analysis)
-    # 步骤建议
-    steps_lines = "\n".join([f"{idx}. {s}" for idx, s in enumerate(resp.steps, start=1)])
-    parts.append("### 分步骤建议\n" + steps_lines)
-    parts.append("### 温暖鼓励\n" + resp.encouragement)
-    parts.append("### 专业提醒\n" + resp.professional_reminder)
-    return "\n\n".join(parts)
-
-
-def generate_chat_reply(user_text: str) -> str:
-    """面向聊天的自然回复：优先调用 OpenAI，对应模型不可用时回退到本地规则。"""
-    # 读取密钥与模型：优先 st.secrets，其次环境变量
-    api_key = None
-    model = "gpt-4o-mini"
-    if _st_available:
-        try:
-            api_key = st.secrets.get("OPENAI_API_KEY", None)  # type: ignore
-            model = st.secrets.get("OPENAI_MODEL", model)  # type: ignore
-        except Exception:
-            pass
-    if not api_key:
-        api_key = os.getenv("OPENAI_API_KEY")
-    env_model = os.getenv("OPENAI_MODEL")
-    if env_model:
-        model = env_model
-
-    if _openai_available and api_key:
-        try:
-            client = OpenAI(api_key=api_key)
-            system_prompt = (
-                "你是一名温暖、鼓励、专业的中文心理咨询助理。"
-                "目标：帮助用户缓解心理困扰、提供心理学建议。"
-                "要求：共情、自然对话风格；不做医疗诊断；发现风险要提醒求助；"
-                "尽量给出具体、可执行的小步骤建议（但以对话口吻表达，而非清单）。"
-            )
-            completion = client.chat.completions.create(
-                model=model,
-                messages=[
-                    {"role": "system", "content": system_prompt},
-                    {"role": "user", "content": user_text},
-                ],
-                temperature=0.7,
-                max_tokens=700,
-            )
-            content = completion.choices[0].message.content or ""
-            if content.strip():
-                return content
-        except Exception:
-            # 回退到本地规则
-            pass
-
-    resp = analyze_and_respond(user_text)
-
-    opening = (
-        f"听起来你正经历{resp.emotion_label}的感受。我能理解这对你来说不容易，"
-        "愿意在这里陪你一起看看能做些什么。"
-    )
-
-    analysis = resp.analysis
-
-    # 将步骤转为对话式表述
-    steps_sentences = []
-    for idx, s in enumerate(resp.steps, start=1):
-        steps_sentences.append(f"{idx}）{s}")
-    steps_text = "试着从这些小步骤开始：" + "；".join(steps_sentences) + "。"
-
-    encouragement = resp.encouragement
-    reminder = resp.professional_reminder
-
-    reply = (
-        f"{opening}\n\n"
-        f"{analysis}\n\n"
-        f"{steps_text}\n\n"
-        f"{encouragement}\n\n"
-        f"{reminder}"
-    )
-    return reply
 
 
 def _contains_crisis_signal(text: str) -> bool:
@@ -268,5 +186,90 @@ def analyze_and_respond(user_text: str) -> AgentResponse:
         encouragement=encouragement,
         professional_reminder=reminder,
     )
+
+
+def format_response_markdown(resp: AgentResponse) -> str:
+    """将结构化响应渲染为对话可读的 Markdown 文本。"""
+    parts: List[str] = []
+    parts.append(f"### 情绪识别\n你当前可能的情绪类型：{resp.emotion_label}")
+    parts.append("### 心理分析\n" + resp.analysis)
+    # 步骤建议
+    steps_lines = "\n".join([f"{idx}. {s}" for idx, s in enumerate(resp.steps, start=1)])
+    parts.append("### 分步骤建议\n" + steps_lines)
+    parts.append("### 温暖鼓励\n" + resp.encouragement)
+    parts.append("### 专业提醒\n" + resp.professional_reminder)
+    return "\n\n".join(parts)
+
+
+def generate_chat_reply(user_text: str) -> str:
+    """增强的本地对话式回复：温暖、共情、自然，不使用分节标题。"""
+    resp = analyze_and_respond(user_text)
+    
+    # 根据情绪类型生成更自然的开场白
+    emotion_openings = {
+        "焦虑、紧张、恐惧": [
+            "我能感受到你内心的不安和紧张。这种感受确实让人很不舒服，但请相信，你并不孤单。",
+            "听起来你正在经历一段充满挑战的时期。焦虑和紧张是很自然的反应，让我们一起找到缓解的方法。",
+            "我能理解你现在的担心和恐惧。这些情绪虽然难受，但也是你内心在保护自己的信号。"
+        ],
+        "抑郁、低落、孤独": [
+            "我能感受到你内心的沉重和孤独。这种感受确实很痛苦，但请记住，黑暗不会永远持续。",
+            "听起来你正在经历一段低落的时期。我能理解这种感受，让我们一起寻找内心的光明。",
+            "我能感受到你内心的孤独和无助。但请相信，总有人愿意倾听和理解你。"
+        ],
+        "压力大、疲惫": [
+            "我能感受到你身上的重担和疲惫。你一直在努力，这真的很不容易。",
+            "听起来你正在承受很大的压力。这种疲惫感我能理解，让我们一起找到平衡的方法。",
+            "我能感受到你的辛苦和疲惫。你一直在坚持，这本身就是一种力量。"
+        ],
+        "情绪混合或困惑": [
+            "我能感受到你内心的复杂情绪。这种困惑和混乱的感觉确实让人困扰。",
+            "听起来你正在经历一段复杂的时期。各种情绪交织在一起，我能理解这种感受。",
+            "我能感受到你内心的迷茫和困惑。让我们一起梳理一下，找到前进的方向。"
+        ]
+    }
+    
+    # 随机选择一个开场白
+    opening = random.choice(emotion_openings.get(resp.emotion_label, emotion_openings["情绪混合或困惑"]))
+    
+    # 将分析转为更自然的表达
+    analysis_phrases = [
+        f"从心理学的角度来看，{resp.analysis.split('。')[0]}。",
+        f"这让我想到，{resp.analysis.split('。')[0]}。",
+        f"我想和你分享的是，{resp.analysis.split('。')[0]}。"
+    ]
+    analysis = random.choice(analysis_phrases)
+    
+    # 将步骤建议转为更自然的表达
+    steps_intro = "我建议你可以尝试以下几个小方法，我们可以一步一步来："
+    steps_text = ""
+    for i, step in enumerate(resp.steps, 1):
+        if i == 1:
+            steps_text += f"首先，{step.replace(str(i)+'. ', '')}"
+        elif i == len(resp.steps):
+            steps_text += f"最后，{step.replace(str(i)+'. ', '')}"
+        else:
+            steps_text += f"然后，{step.replace(str(i)+'. ', '')}"
+        if i < len(resp.steps):
+            steps_text += " "
+    
+    # 更温暖的鼓励语
+    encouragement_phrases = [
+        "记住，改变需要时间，不要给自己太大压力。你已经迈出了重要的一步，这很勇敢。",
+        "我相信你有能力度过这个困难时期。每一次尝试都是进步，每一次坚持都是成长。",
+        "你并不孤单，我在这里陪伴你。让我们一起面对这些挑战，找到属于你的解决方案。"
+    ]
+    encouragement = random.choice(encouragement_phrases)
+    
+    # 组合成自然的对话回复
+    reply = (
+        f"{opening}\n\n"
+        f"{analysis}\n\n"
+        f"{steps_intro}\n{steps_text}\n\n"
+        f"{encouragement}\n\n"
+        f"{resp.professional_reminder}"
+    )
+    
+    return reply
 
 
