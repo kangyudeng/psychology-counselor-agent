@@ -24,6 +24,56 @@ st.markdown("""
         backdrop-filter: blur(10px);
     }
     
+    /* 顶部导航栏 */
+    .top-nav {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        border-radius: 15px;
+        padding: 15px 20px;
+        margin-bottom: 20px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        color: white;
+        box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+    }
+    
+    .nav-left {
+        display: flex;
+        align-items: center;
+        gap: 15px;
+    }
+    
+    .nav-title {
+        font-size: 1.2rem;
+        font-weight: 600;
+    }
+    
+    .nav-status {
+        background: rgba(255, 255, 255, 0.2);
+        padding: 5px 12px;
+        border-radius: 20px;
+        font-size: 0.8rem;
+    }
+    
+    .nav-actions {
+        display: flex;
+        gap: 10px;
+    }
+    
+    .nav-button {
+        background: rgba(255, 255, 255, 0.2);
+        border: none;
+        color: white;
+        padding: 8px 12px;
+        border-radius: 8px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+    
+    .nav-button:hover {
+        background: rgba(255, 255, 255, 0.3);
+    }
+    
     /* 标题样式 */
     .main-title {
         text-align: center;
@@ -40,6 +90,48 @@ st.markdown("""
         font-size: 1.1rem;
         margin-bottom: 30px;
         line-height: 1.6;
+    }
+    
+    /* 功能卡片区域 */
+    .feature-cards {
+        display: flex;
+        gap: 15px;
+        margin: 20px 0;
+        flex-wrap: wrap;
+        justify-content: center;
+    }
+    
+    .feature-card {
+        background: white;
+        border-radius: 15px;
+        padding: 20px;
+        text-align: center;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        border: 1px solid #e2e8f0;
+        transition: all 0.3s ease;
+        cursor: pointer;
+        min-width: 120px;
+    }
+    
+    .feature-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+    }
+    
+    .feature-icon {
+        font-size: 2rem;
+        margin-bottom: 10px;
+    }
+    
+    .feature-title {
+        font-weight: 600;
+        color: #2d3748;
+        margin-bottom: 5px;
+    }
+    
+    .feature-desc {
+        font-size: 0.8rem;
+        color: #718096;
     }
     
     /* 聊天消息容器 */
@@ -117,7 +209,6 @@ st.markdown("""
         color: white;
         font-size: 18px;
         margin-right: 15px;
-        vertical-align: top;
         box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
     }
     
@@ -189,6 +280,47 @@ st.markdown("""
         gap: 15px;
     }
     
+    /* 底部导航栏 */
+    .bottom-nav {
+        background: white;
+        border-radius: 20px;
+        padding: 15px 20px;
+        margin-top: 20px;
+        display: flex;
+        justify-content: space-around;
+        align-items: center;
+        box-shadow: 0 -4px 15px rgba(0, 0, 0, 0.1);
+    }
+    
+    .nav-item {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 5px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        padding: 10px;
+        border-radius: 10px;
+    }
+    
+    .nav-item:hover {
+        background: #f7fafc;
+    }
+    
+    .nav-item.active {
+        color: #667eea;
+        background: #f0f4ff;
+    }
+    
+    .nav-icon {
+        font-size: 1.5rem;
+    }
+    
+    .nav-label {
+        font-size: 0.8rem;
+        font-weight: 500;
+    }
+    
     /* 响应式设计 */
     @media (max-width: 768px) {
         .chat-container {
@@ -202,6 +334,11 @@ st.markdown("""
         
         .user-message, .assistant-message {
             max-width: 90%;
+        }
+        
+        .feature-cards {
+            flex-direction: column;
+            align-items: center;
         }
     }
     
@@ -230,10 +367,45 @@ st.markdown("""
 def render_header():
     st.markdown("""
     <div class="chat-container">
+        <div class="top-nav">
+            <div class="nav-left">
+                <div>☰</div>
+                <div class="nav-title">心理咨询智能体</div>
+                <div class="nav-status">• 在线</div>
+            </div>
+            <div class="nav-actions">
+                <button class="nav-button">📥</button>
+                <button class="nav-button">⚙️</button>
+            </div>
+        </div>
+        
         <div class="main-title">🫶 心理咨询智能体</div>
         <div class="subtitle">
             温暖、鼓励、专业的心理支持助手<br>
             以下建议不构成诊断或治疗，若有安全风险请立即寻求线下帮助
+        </div>
+        
+        <div class="feature-cards">
+            <div class="feature-card">
+                <div class="feature-icon">🧠</div>
+                <div class="feature-title">情绪识别</div>
+                <div class="feature-desc">智能分析</div>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">💡</div>
+                <div class="feature-title">专业建议</div>
+                <div class="feature-desc">个性化方案</div>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">🤗</div>
+                <div class="feature-title">温暖陪伴</div>
+                <div class="feature-desc">24/7支持</div>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">📱</div>
+                <div class="feature-title">便捷使用</div>
+                <div class="feature-desc">随时随地</div>
+            </div>
         </div>
     </div>
     """, unsafe_allow_html=True)
@@ -242,6 +414,8 @@ def render_header():
 def init_chat_state():
     if "messages" not in st.session_state:
         st.session_state.messages = []
+    if "current_tab" not in st.session_state:
+        st.session_state.current_tab = "chat"
 
 
 def render_chat_ui():
@@ -276,7 +450,7 @@ def render_chat_ui():
     )
     
     # 输入按钮行
-    col1, col2, col3 = st.columns([1, 1, 1])
+    col1, col2, col3, col4 = st.columns([1, 1, 1, 1])
     
     with col1:
         if st.button("发送", key="send_button", use_container_width=True):
@@ -302,7 +476,37 @@ def render_chat_ui():
             st.session_state.example_text = example
             st.rerun()
     
+    with col4:
+        if st.button("导出对话", key="export_button", use_container_width=True):
+            export_conversation()
+    
     st.markdown('</div>', unsafe_allow_html=True)
+    
+    # 底部导航栏
+    render_bottom_nav()
+
+
+def render_bottom_nav():
+    st.markdown("""
+    <div class="bottom-nav">
+        <div class="nav-item active">
+            <div class="nav-icon">🏠</div>
+            <div class="nav-label">首页</div>
+        </div>
+        <div class="nav-item">
+            <div class="nav-icon">💬</div>
+            <div class="nav-label">聊天</div>
+        </div>
+        <div class="nav-item">
+            <div class="nav-icon">🎯</div>
+            <div class="nav-label">目标</div>
+        </div>
+        <div class="nav-item">
+            <div class="nav-icon">📅</div>
+            <div class="nav-label">预约</div>
+        </div>
+    </div>
+    """, unsafe_allow_html=True)
 
 
 def process_user_input(user_text):
@@ -315,6 +519,28 @@ def process_user_input(user_text):
     # 生成助手回复
     reply = generate_chat_reply(user_text)
     st.session_state.messages.append({"role": "assistant", "content": reply})
+
+
+def export_conversation():
+    if not st.session_state.messages:
+        st.warning("暂无对话内容可导出")
+        return
+    
+    # 生成对话文本
+    conversation_text = "心理咨询智能体 - 对话记录\n"
+    conversation_text += "=" * 50 + "\n\n"
+    
+    for msg in st.session_state.messages:
+        role = "用户" if msg["role"] == "user" else "智能体"
+        conversation_text += f"{role}：{msg['content']}\n\n"
+    
+    # 创建下载按钮
+    st.download_button(
+        label="📥 下载对话记录",
+        data=conversation_text,
+        file_name=f"心理咨询对话_{st.session_state.get('session_id', 'session')}.txt",
+        mime="text/plain"
+    )
 
 
 def render_response(_user_text: str):
