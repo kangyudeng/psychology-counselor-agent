@@ -1,5 +1,5 @@
 import streamlit as st
-from agent_logic import analyze_and_respond, format_response_markdown
+from agent_logic import analyze_and_respond, format_response_markdown, generate_chat_reply
 
 
 st.set_page_config(page_title="心理咨询智能体", page_icon="🫶", layout="centered")
@@ -31,8 +31,7 @@ def render_chat_ui():
             st.markdown(prompt)
 
         # 生成回复
-        resp = analyze_and_respond(prompt)
-        md = format_response_markdown(resp)
+        md = generate_chat_reply(prompt)
         with st.chat_message("assistant"):
             st.markdown(md)
         st.session_state.messages.append({"role": "assistant", "content": md})

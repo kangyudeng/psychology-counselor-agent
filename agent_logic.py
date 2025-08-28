@@ -40,6 +40,36 @@ def format_response_markdown(resp: AgentResponse) -> str:
     return "\n\n".join(parts)
 
 
+def generate_chat_reply(user_text: str) -> str:
+    """面向聊天的自然回复：温暖、共情、专业，不使用分节标题。"""
+    resp = analyze_and_respond(user_text)
+
+    opening = (
+        f"听起来你正经历{resp.emotion_label}的感受。我能理解这对你来说不容易，"
+        "愿意在这里陪你一起看看能做些什么。"
+    )
+
+    analysis = resp.analysis
+
+    # 将步骤转为对话式表述
+    steps_sentences = []
+    for idx, s in enumerate(resp.steps, start=1):
+        steps_sentences.append(f"{idx}）{s}")
+    steps_text = "试着从这些小步骤开始：" + "；".join(steps_sentences) + "。"
+
+    encouragement = resp.encouragement
+    reminder = resp.professional_reminder
+
+    reply = (
+        f"{opening}\n\n"
+        f"{analysis}\n\n"
+        f"{steps_text}\n\n"
+        f"{encouragement}\n\n"
+        f"{reminder}"
+    )
+    return reply
+
+
 def _contains_crisis_signal(text: str) -> bool:
     if not text:
         return False
