@@ -1,5 +1,5 @@
 import streamlit as st
-from agent_logic import analyze_and_respond
+from agent_logic import analyze_and_respond, format_response_markdown
 
 
 st.set_page_config(page_title="心理咨询智能体", page_icon="🫶", layout="centered")
@@ -12,46 +12,47 @@ def render_header():
     )
 
 
-def render_input():
-    with st.form("user_input_form", clear_on_submit=False):
-        user_text = st.text_area(
-            "请描述你的情况或此刻的感受：",
-            height=180,
-            placeholder="例如：最近总是焦虑，晚上睡不着，工作压力大。",
-        )
-        submitted = st.form_submit_button("获取建议")
-    return user_text, submitted
+def init_chat_state():
+    if "messages" not in st.session_state:
+        st.session_state.messages = []  # [{"role": "user"|"assistant", "content": str}]
 
 
-def render_response(user_text: str):
-    if not user_text.strip():
-        st.info("请先输入你的情况，我会尽力帮助你。")
-        return
+def render_chat_ui():
+    # 历史消息
+    for msg in st.session_state.messages:
+        with st.chat_message(msg["role"]):
+            st.markdown(msg["content"])
 
-    result = analyze_and_respond(user_text)
+    # 输入区
+    prompt = st.chat_input("描述你的情况、情绪或问题。我会一步步帮助你。")
+    if prompt:
+        st.session_state.messages.append({"role": "user", "content": prompt})
+        with st.chat_message("user"):
+            st.markdown(prompt)
 
-    st.markdown("### 情绪识别")
-    st.write(f"你当前可能的情绪类型：{result.emotion_label}")
+        # 生成回复
+        resp = analyze_and_respond(prompt)
+        md = format_response_markdown(resp)
+        with st.chat_message("assistant"):
+            st.markdown(md)
+        st.session_state.messages.append({"role": "assistant", "content": md})
 
-    st.markdown("### 心理分析")
-    st.write(result.analysis)
+    # 工具栏
+    cols = st.columns(2)
+    if cols[0].button("清空会话"):
+        st.session_state.messages = []
+        st.experimental_rerun()
 
-    st.markdown("### 分步骤建议")
-    for idx, step in enumerate(result.steps, start=1):
-        st.markdown(f"{idx}. {step}")
 
-    st.markdown("### 温暖鼓励")
-    st.success(result.encouragement)
-
-    st.markdown("### 专业提醒")
-    st.warning(result.professional_reminder)
+def render_response(_user_text: str):
+    # 兼容旧函数，不再使用
+    pass
 
 
 def main():
     render_header()
-    user_text, submitted = render_input()
-    if submitted:
-        render_response(user_text)
+    init_chat_state()
+    render_chat_ui()
 
 
 if __name__ == "__main__":

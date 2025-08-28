@@ -27,6 +27,19 @@ class AgentResponse:
     professional_reminder: str
 
 
+def format_response_markdown(resp: AgentResponse) -> str:
+    """将结构化响应渲染为对话可读的 Markdown 文本。"""
+    parts: List[str] = []
+    parts.append(f"### 情绪识别\n你当前可能的情绪类型：{resp.emotion_label}")
+    parts.append("### 心理分析\n" + resp.analysis)
+    # 步骤建议
+    steps_lines = "\n".join([f"{idx}. {s}" for idx, s in enumerate(resp.steps, start=1)])
+    parts.append("### 分步骤建议\n" + steps_lines)
+    parts.append("### 温暖鼓励\n" + resp.encouragement)
+    parts.append("### 专业提醒\n" + resp.professional_reminder)
+    return "\n\n".join(parts)
+
+
 def _contains_crisis_signal(text: str) -> bool:
     if not text:
         return False
