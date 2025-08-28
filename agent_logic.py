@@ -15,7 +15,16 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import List, Dict
+from typing import List, Dict, Optional
+import os
+
+try:
+    # 兼容 openai>=1.0 的新客户端
+    from openai import OpenAI  # type: ignore
+    _openai_available = True
+except Exception:
+    OpenAI = None  # type: ignore
+    _openai_available = False
 
 
 @dataclass
@@ -41,7 +50,35 @@ def format_response_markdown(resp: AgentResponse) -> str:
 
 
 def generate_chat_reply(user_text: str) -> str:
-    """面向聊天的自然回复：温暖、共情、专业，不使用分节标题。"""
+    """面向聊天的自然回复：优先调用 OpenAI，对应模型不可用时回退到本地规则。"""
+    api_key = os.getenv("OPENAI_API_KEY")
+    model = os.getenv("OPENAI_MODEL", "gpt-4o-mini")
+
+    if _openai_available and api_key:
+        try:
+            client = OpenAI(api_key=api_key)
+            system_prompt = (
+                "你是一名温暖、鼓励、专业的中文心理咨询助理。"
+                "目标：帮助用户缓解心理困扰、提供心理学建议。"
+                "要求：共情、自然对话风格；不做医疗诊断；发现风险要提醒求助；"
+                "尽量给出具体、可执行的小步骤建议（但以对话口吻表达，而非清单）。"
+            )
+            completion = client.chat.completions.create(
+                model=model,
+                messages=[
+                    {"role": "system", "content": system_prompt},
+                    {"role": "user", "content": user_text},
+                ],
+                temperature=0.7,
+                max_tokens=700,
+            )
+            content = completion.choices[0].message.content or ""
+            if content.strip():
+                return content
+        except Exception:
+            # 回退到本地规则
+            pass
+
     resp = analyze_and_respond(user_text)
 
     opening = (

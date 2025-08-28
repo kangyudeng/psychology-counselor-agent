@@ -25,9 +25,12 @@
 python3 -m venv .venv && source .venv/bin/activate
 ```
 
-2. 安装依赖
+2. 安装依赖（如需调用 OpenAI 接口将 .env 或环境变量中配置 OPENAI_API_KEY）
 ```bash
 pip install -r requirements.txt
+export OPENAI_API_KEY=你的密钥  # 或使用 macOS: echo 'export OPENAI_API_KEY=xxxx' >> ~/.zshrc
+# 可选：指定模型（默认 gpt-4o-mini）
+export OPENAI_MODEL=gpt-4o-mini
 ```
 
 3. 启动应用
@@ -47,6 +50,7 @@ streamlit run app.py
 
 - 尽量具体描述情境、想法与身体反应，便于更准确的识别与建议。
 - 若存在安全风险（如自伤/自杀念头），请立即寻求线下紧急帮助，应用会优先给出求助指引。
+- 若配置 `OPENAI_API_KEY`，对话将由 OpenAI 模型生成（自然对话风格）；未配置时使用本地启发式规则生成建议。
 
 ## 声明
 
